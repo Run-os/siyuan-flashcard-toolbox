@@ -21,7 +21,7 @@ import {
   getHeadingTextElement,
   getCustomTitle
 } from './utils';
-import { getBlockAttrs, setBlockAttrs } from '../../api';
+import { getBlockAttrs, setBlockAttrs, getBlockByID } from '../../api';
 
 let observer: MutationObserver | null = null;
 let editorObserver: MutationObserver | null = null;
@@ -113,7 +113,7 @@ const DEBUG_PREFIX = '[FlashcardTitle]';
  * 替换单个闪卡的标题
  * @param cardElement 闪卡元素
  */
-const replaceFlashcardTitle = (cardElement: HTMLElement) => {
+const replaceFlashcardTitle = async (cardElement: HTMLElement) => {
   console.log(DEBUG_PREFIX, '开始处理闪卡（已确认在复习界面）', cardElement);
   
   // 检查是否已替换，避免重复处理
@@ -125,12 +125,6 @@ const replaceFlashcardTitle = (cardElement: HTMLElement) => {
   // 获取自定义标题
   const customTitle = getCustomTitle(cardElement);
   console.log(DEBUG_PREFIX, 'custom-riff-title 属性值:', customTitle);
-  
-  // 如果标题为空，不做替换（保持原标题）
-  if (!customTitle) {
-    console.log(DEBUG_PREFIX, '标题为空，保持原标题不变');
-    return;
-  }
   
   // 获取第一个子元素（排除 protyle-attr）
   const firstChild = cardElement.querySelector<HTMLElement>(':scope > div:not(.protyle-attr)');
@@ -154,6 +148,30 @@ const replaceFlashcardTitle = (cardElement: HTMLElement) => {
   
   if (!textElement) {
     console.log(DEBUG_PREFIX, '未找到标题文本元素');
+    return;
+  }
+  
+  // 如果标题为空，需要恢复原标题
+  if (!customTitle) {
+    // 从标题元素获取块 ID 以查询原始标题（标题元素有独立的 data-node-id）
+    const headingBlockId = firstChild.getAttribute('data-node-id');
+    if (headingBlockId) {
+      try {
+        const block = await getBlockByID(headingBlockId);
+        if (block && block.content) {
+          textElement.textContent = block.content;
+          console.log(DEBUG_PREFIX, '✅ 标题已恢复为原标题:', block.content);
+        } else {
+          console.log(DEBUG_PREFIX, '标题为空，保持原标题不变');
+        }
+      } catch (error) {
+        console.log(DEBUG_PREFIX, '获取原标题失败，保持当前标题不变');
+      }
+    } else {
+      console.log(DEBUG_PREFIX, '标题为空，保持原标题不变');
+    }
+    // 标记已处理
+    cardElement.setAttribute(TITLE_REPLACED_FLAG, 'true');
     return;
   }
   
@@ -368,10 +386,6 @@ const openEditDialog = async (blockId: string) => {
 
   const handleSave = async () => {
     const title = filterInvalidChars(inputEl.value);
-    if (!title) {
-      showSiyuanMsg(TIP_TITLE_EMPTY, 'error');
-      return;
-    }
 
     try {
       await setBlockAttrs(blockId, { [FLASHCARD_TITLE_ATTR]: title });
