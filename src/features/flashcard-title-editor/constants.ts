@@ -35,3 +35,23 @@ export const FLASHCARD_TITLE_ATTR = 'custom-riff-title';
 export const DEBOUNCE_DELAY = 300;
 // 通知显示时长（ms）
 export const MSG_TIMEOUT = 2000;
+
+// ========== 复习界面标题替换相关 ==========
+// 复习界面容器选择器
+export const REVIEW_CONTAINER_SELECTOR = '.protyle-wysiwyg';
+// 当前显示的闪卡选择器（带有 custom-super-card-box="1" 属性）
+export const REVIEW_CURRENT_FLASHCARD_SELECTOR = '[custom-super-card-box="1"][custom-riff-decks]';
+// 标题元素类型标识
+export const HEADING_TYPE = 'NodeHeading';
+// 标题文本元素选择器
+export const HEADING_TEXT_SELECTOR = 'div[contenteditable="true"]';
+// 已替换标记属性
+export const TITLE_REPLACED_FLAG = 'data-title-replaced';
+
+// ========== 界面判断相关 ==========
+// 复习界面标识属性（父级元素）
+export const REVIEW_INTERFACE_ATTR = 'data-key';
+export const REVIEW_INTERFACE_VALUE = 'dialog-opencard';
+// 编辑器界面标识属性（父级元素）
+export const EDITOR_INTERFACE_ATTR = 'data-loading';
+export const EDITOR_INTERFACE_VALUE = 'finished';
