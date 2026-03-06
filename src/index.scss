@@ -1,4 +1,11 @@
 // 闪卡标题编辑按钮样式
 .ft-editor-edit-btn {
-  margin-left: auto;
+  order: 9999 !important;
+  margin-left: auto !important;
+}
+
+// 确保 protyle-attr 是 flex 容器
+.protyle-attr {
+  display: flex !important;
+  align-items: center !important;
 }
