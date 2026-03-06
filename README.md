@@ -2,9 +2,11 @@
 
 思源笔记中管理闪卡标题的工具箱插件。帮助您自定义、编辑和管理闪卡标题。
 
-![1](./asset/readme1.png)
+[![1](./asset/readme1.png)](https://github.com/Run-os/siyuan-flashcard-title-toolbox-plugin/blob/main/asset/readme1.png)
 
-![演示视频](asset\PixPin_2026-03-06_23-26-52[00h00m00s-00h00m20s].gif)
+演示视频：
+
+![asset\PixPin_2026-03-06_23-26-52[00h00m00s-00h00m20s].gif](https://raw.githubusercontent.com/Run-os/siyuan-flashcard-title-toolbox-plugin/refs/heads/main/asset/PixPin_2026-03-06_23-26-52%5B00h00m00s-00h00m20s%5D.gif)
 
 ## 功能特性
 
