@@ -50,6 +50,10 @@
 
 ## 使用方法
 
+### 使用限制
+
+仅支持带标题的制卡，如：`标题制卡和超级块制卡`，标题应当为闪卡的第一个元素。
+
 ### 编辑闪卡标题
 
 1. 在编辑器中打开含有闪卡的文档
@@ -143,3 +147,4 @@ pnpm release:manual  # 手动指定版本号
 - [思源笔记官网](https://b3log.org/siyuan/)
 - [思源插件开发指南](https://github.com/siyuan-note/plugin-sample)
 - [思源插件 SDK](https://github.com/siyuan-note/petal)
+- [sysy-tomato-plugin](https://github.com/IAliceBobI/sy-tomato-plugin)
