@@ -36,7 +36,6 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { showSiyuanMsg, filterInvalidChars } from './utils';
 import {
-  TIP_TITLE_EMPTY,
   SAVE_BUTTON_TEXT,
   CANCEL_BUTTON_TEXT,
   TIP_LOADING,
@@ -101,10 +100,6 @@ watch(
 
 const handleSave = async () => {
   const filteredTitle = filterInvalidChars(inputTitle.value);
-  if (!filteredTitle) {
-    showSiyuanMsg(TIP_TITLE_EMPTY, 'error');
-    return;
-  }
 
   try {
     loading.value = true;

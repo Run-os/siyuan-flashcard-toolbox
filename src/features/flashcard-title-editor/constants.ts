@@ -13,7 +13,6 @@ export const SAVE_BUTTON_TEXT = '保存';
 export const CANCEL_BUTTON_TEXT = '取消';
 
 // 提示文案
-export const TIP_TITLE_EMPTY = '标题不能为空';
 export const TIP_SAVE_SUCCESS = '闪卡标题修改成功';
 export const TIP_SAVE_FAILED = '闪卡标题修改失败';
 export const TIP_LOADING = '加载中...';
