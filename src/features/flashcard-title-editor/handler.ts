@@ -308,7 +308,7 @@ const handleReviewTitle = async (
 
   // 仅替换文本内容，保持所有属性和结构不变
   const originalText = textElement.textContent;
-  textElement.textContent = customTitle;
+  textElement.textContent = `「${customTitle}」`;
 
   // 锁定标题元素，防止用户编辑
   lockTitleElement(textElement);
