@@ -14,7 +14,8 @@ import {
 } from './constants';
 import {
   getCustomTitle,
-  getHeadingTextElement
+  getHeadingTextElement,
+  isInReviewInterface
 } from './utils';
 import { getBlockByID } from '../../api';
 import { createDebugLogger } from '@/utils/debug';
@@ -66,29 +67,37 @@ export const unmarkElementProcessed = (element: HTMLElement): void => {
 
 /**
  * 统一处理闪卡标题
- * 无论在哪个界面，只要有 custom-riff-decks 属性就添加编辑按钮
- * @param interfaceType 界面类型
+ * 流程步骤：
+ * 1. 扫描所有包含 custom-riff-decks 属性的元素
+ * 2. 为每个元素添加编辑按钮
+ * 3. 判断元素所在界面类型（3 类：review / editor / other）
+ * 4. 分支处理：
+ *    - review 界面：替换为「新标题」 + 锁定标题编辑
+ *    - editor/other 界面：解锁标题 + 显示原标题 + 展示提示文案「原标题@@新标题」
+ * @param _interfaceType 监听器传入的界面类型（未使用，改为元素实际位置判断）
  * @param element 闪卡元素
  */
 export const handleFlashcardTitle = async (
-  interfaceType: InterfaceType,
+  _interfaceType: InterfaceType,
   element: HTMLElement
 ): Promise<void> => {
-  // 核心复用逻辑：读取自定义标题属性
+  // 步骤 1：读取自定义标题属性
   const customTitle = getCustomTitle(element);
 
-  // 解锁所有被锁定的标题块（进入编辑界面时需要）
-  unlockAllTitleBlocks();
+  // 步骤 2：判断元素实际所在界面类型（3 类：review / editor / other）
+  const actualInterfaceType = isInReviewInterface(element) ? 'review' : 'editor';
+  debug.log(`元素实际界面类型: ${actualInterfaceType}`);
 
-  // 统一添加编辑按钮（所有界面都添加）
+  // 步骤 3：统一添加编辑按钮（所有界面都添加）
   addEditButtonToElement(element);
 
-  // 差异化分支处理：仅闪卡复习界面需要替换标题显示
-  if (interfaceType === 'review') {
-    // 闪卡界面：替换显示标题
+  // 步骤 4：根据界面类型分支处理
+  if (actualInterfaceType === 'review') {
+    // review 界面：替换为「新标题」 + 锁定标题编辑
     await handleReviewTitleDisplay(element, customTitle);
   } else {
-    // 编辑界面/其他界面：显示标题提示
+    // editor/other 界面：解锁标题 + 显示原标题 + 展示提示文案「原标题@@新标题」
+    await unlockTitleForElement(element);
     showTitleHintOnElement(element, customTitle);
   }
 };
@@ -119,20 +128,40 @@ const unlockTitleElement = (textElement: HTMLElement): void => {
 };
 
 /**
- * 解锁所有被锁定的标题块
- * 在进入编辑界面时调用
+ * 解锁单个闪卡元素的标题
+ * 用于编辑界面，确保标题可编辑
+ * @param cardElement 闪卡元素
  */
-export const unlockAllTitleBlocks = (): void => {
-  const lockedElements = document.querySelectorAll<HTMLElement>(
-    `[${TITLE_LOCKED_ATTR}]`
+const unlockTitleForElement = async (cardElement: HTMLElement): Promise<void> => {
+  // 查找标题块
+  const headingElement = cardElement.querySelector<HTMLElement>(
+    '[data-type="NodeHeading"]'
   );
-  if (lockedElements.length === 0) return;
+  if (!headingElement) return;
 
-  lockedElements.forEach((element) => {
-    element.contentEditable = 'true';
-    element.removeAttribute(TITLE_LOCKED_ATTR);
-  });
-  debug.log(`🔓 已解锁 ${lockedElements.length} 个标题块`);
+  // 获取标题文本元素（使用 getHeadingTextElement 兼容锁定/未锁定状态）
+  const textElement = getHeadingTextElement(headingElement);
+  if (!textElement) return;
+
+  // 如果标题被锁定，解锁并恢复原标题
+  if (textElement.hasAttribute(TITLE_LOCKED_ATTR)) {
+    textElement.contentEditable = 'true';
+    textElement.removeAttribute(TITLE_LOCKED_ATTR);
+
+    // 恢复原标题文本
+    const blockId = headingElement.getAttribute('data-node-id');
+    if (blockId) {
+      try {
+        const block = await getBlockByID(blockId);
+        if (block && block.content) {
+          textElement.textContent = block.content;
+          debug.log('🔓 已恢复原标题:', block.content);
+        }
+      } catch (error) {
+        debug.log('获取原标题失败', error);
+      }
+    }
+  }
 };
 
 // ========== 编辑按钮处理 ==========
@@ -206,10 +235,8 @@ const showTitleHintOnElement = (
   );
   if (!headingElement) return;
 
-  // 获取标题文本元素（contenteditable）
-  const textElement = headingElement.querySelector<HTMLElement>(
-    HEADING_TEXT_SELECTOR
-  );
+  // 获取标题文本元素（使用 getHeadingTextElement 兼容锁定/未锁定状态）
+  const textElement = getHeadingTextElement(headingElement);
   if (!textElement) return;
 
   if (customTitle && customTitle.trim()) {
@@ -296,6 +323,9 @@ const handleReviewTitleDisplay = async (
   // 仅替换文本内容，保持所有属性和结构不变
   const originalText = textElement.textContent;
   textElement.textContent = `「${customTitle}」`;
+
+  // 清除编辑界面可能遗留的 data-custom-title 属性，避免 CSS 伪元素重复显示
+  textElement.removeAttribute(EDITOR_TITLE_HINT_ATTR);
 
   // 锁定标题元素，防止用户编辑
   lockTitleElement(textElement);
